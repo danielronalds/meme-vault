@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "meme-vault-core"
+]
+resolver = "2"
