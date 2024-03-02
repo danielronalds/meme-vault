@@ -1,5 +1,6 @@
 [workspace]
 members = [
-    "meme-vault-core"
+    "meme-vault-core",
+    "meme-vault-fetcher"
 ]
 resolver = "2"
