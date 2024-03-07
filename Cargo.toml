@@ -4,3 +4,6 @@ members = [
     "meme-vault-fetcher"
 ]
 resolver = "2"
+
+[workspace.dependencies]
+serde = { version = "1.0.197", features = ["derive"] }

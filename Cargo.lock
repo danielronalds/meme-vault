@@ -393,7 +393,6 @@ name = "meme-vault-fetcher"
 version = "0.1.0"
 dependencies = [
  "reqwest",
- "serde",
 ]
 
 [[package]]
