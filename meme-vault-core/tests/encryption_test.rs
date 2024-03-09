@@ -1,4 +1,4 @@
-use meme_vault_core::*;
+use meme_vault_core::{Record, encryption::{encrypt_record, decrypt_record}};
 
 #[test]
 pub fn test_encryption_to_decryption() {
