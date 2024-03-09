@@ -1,8 +1,6 @@
 use std::{
-
+    error::Error,
     fs::File,
-    io::{copy, Write},
-    path::Path, error::Error,
 };
 
 /// The URL of the API for meme fetching
@@ -40,7 +38,7 @@ pub struct Meme {
 /// # Returns
 ///
 /// Either a [`reqwest::Error`] or a [`Meme`]
-pub fn get_random_meme(source: MemeSubreddit) -> Result<Meme, reqwest::Error> {
+fn get_random_meme(source: MemeSubreddit) -> Result<Meme, reqwest::Error> {
     let url = format!("{}{}", API_URL, source.to_string());
 
     let response = reqwest::blocking::get(url)?;
@@ -61,7 +59,7 @@ pub fn get_random_meme(source: MemeSubreddit) -> Result<Meme, reqwest::Error> {
 /// # Returns
 ///
 /// An error if either the file fails to create, or if the GET request fails
-pub fn download_meme(meme: &Meme, dest_dir: &str) -> Result<(), Box<dyn Error>> {
+fn download_meme(meme: &Meme, dest_dir: &str) -> Result<(), Box<dyn Error>> {
     // Removing spaces from the file name
     let formated_title = meme.title.replace(" ", "_");
 
@@ -69,11 +67,30 @@ pub fn download_meme(meme: &Meme, dest_dir: &str) -> Result<(), Box<dyn Error>> 
 
     let mut dest = File::create(&path)?;
 
-    let response = reqwest::blocking::get(meme.url.as_str())?
-        .copy_to(&mut dest);
+    let response = reqwest::blocking::get(meme.url.as_str())?.copy_to(&mut dest);
 
     match response {
         Ok(_) => Ok(()),
-        Err(err) => Err(Box::new(err))
+        Err(err) => Err(Box::new(err)),
     }
+}
+
+/// Downloads a random meme to the directory supplied
+///
+/// # Parameters
+///
+/// - `source` The subreddit to get the Meme from
+/// - `dest_dir` The directory to download the meme to. **NOTE** do not append a / at the end of
+/// to the end of the path, this is appended in the function
+///
+/// # Returns
+///
+/// An error if either the file fails to create, or if the GET request fails. Otherwise the name of
+/// the downloaded meme
+pub fn download_random_meme(source: MemeSubreddit, dest_dir: &str) -> Result<String, Box<dyn Error>> {
+   let meme = get_random_meme(source)?;
+
+   download_meme(&meme, dest_dir)?;
+
+   Ok(meme.title)
 }
