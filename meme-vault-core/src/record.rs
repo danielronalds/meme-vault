@@ -26,3 +26,14 @@ impl Record {
         json.to_owned().as_bytes().to_owned()
     }
 }
+
+impl TryFrom<String> for Record {
+    type Error = &'static str;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match serde_json::from_str(value.as_str()) {
+            Ok(record) => Ok(record),
+            Err(_) => Err("Failed to deserialise")
+        }
+    }
+}

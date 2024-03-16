@@ -4,12 +4,13 @@ use std::{
     io::{Read, Write},
 };
 
-use stegano_core::{
-    media::image::{decoder::ImageRgbaColor, encoder::ImageRgbaColorMut},
-    universal_decoder::{Decoder, OneBitUnveil},
-    universal_encoder::{Encoder, OneBitHide},
-    SteganoEncoder,
+use steganography::{
+    decoder::Decoder,
+    encoder::Encoder,
+    util::{file_as_dynamic_image, file_as_image_buffer, save_image_buffer, bytes_to_str},
 };
+
+use crate::{record, Record};
 
 /// Embed an encrypted record into the given image
 ///
@@ -23,14 +24,15 @@ pub fn embed_record(
 ) -> Result<(), Box<dyn Error>> {
     let png_path = png_path.as_ref();
 
-    let mut image = image::open(png_path)?.to_rgba8();
+    let image = file_as_dynamic_image(png_path.to_string());
 
-    let mut encoder = Encoder::new(ImageRgbaColorMut::new(&mut image).into_iter(), OneBitHide);
-    encoder.write_all(&encrypted_record)?;
+    let encoder = Encoder::new(encrypted_record, image);
 
-    // Overwriting the image file
-    fs::remove_file(png_path)?;
-    Ok(image.save(png_path)?)
+    let encoded_image = encoder.encode_alpha();
+
+    save_image_buffer(encoded_image, png_path.to_string());
+
+    Ok(())
 }
 
 /// Dislodges an encrypted record from the given image
@@ -41,13 +43,14 @@ pub fn embed_record(
 pub fn dislodge_record(png_path: impl AsRef<str>) -> Result<String, Box<dyn Error>> {
     let png_path = png_path.as_ref();
 
-    let mut image = image::open(png_path)?.to_rgba8();
+    let encoded_image = file_as_image_buffer(png_path.to_string());
 
-    let mut record_string = String::new();
+    let decoder = Decoder::new(encoded_image);
 
-    let mut decoder = Decoder::new(ImageRgbaColor::new(&image), OneBitUnveil);
+    let out_buffer = decoder.decode_alpha();
 
-    decoder.read_to_string(&mut record_string)?;
+    //If there is no alpha, it's set to 255 by default so we filter those out
+    let clean_buffer: Vec<u8> = out_buffer.into_iter().filter(|b| *b != 0xff_u8).collect();
 
-    Ok(record_string)
+    Ok(bytes_to_str(&clean_buffer).to_string())
 }

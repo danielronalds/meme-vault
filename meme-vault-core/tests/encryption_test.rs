@@ -1,3 +1,5 @@
+use std::fs;
+
 use meme_vault_core::{
     encryption::{decrypt_record, encrypt_record},
     steganography::{dislodge_record, embed_record},
@@ -29,16 +31,20 @@ pub fn test_encryption_to_decryption() {
 fn image_encryption_to_decryption() {
     let png_path = format!(
         "./{}.png",
-        download_random_meme(meme_vault_fetcher::MemeSubreddit::WholesomeMemes, ".")
+        download_random_meme(meme_vault_fetcher::MemeSubreddit::ProgrammerHumor, ".")
             .expect("Failed to download meme")
             .replace(" ", "_"),
     );
 
-    let record = "Testing 123";
+    let record = Record::new("Tester", "Just a simple testing record", "password");
 
-    embed_record(record.as_bytes(), &png_path).expect("Failed to embed record");
+    embed_record(&record.as_bytes(), &png_path).expect("Failed to embed record");
 
-    let dislodged_record = dislodge_record(png_path).expect("Failed to dislodge record");
+    let dislodged_record =
+        Record::try_from(dislodge_record(&png_path).expect("Failed to dislodge record"))
+            .expect("Failed to dislodge record");
 
     assert_eq!(record, dislodged_record);
+
+    fs::remove_file(png_path).expect("Failed to delete file");
 }
