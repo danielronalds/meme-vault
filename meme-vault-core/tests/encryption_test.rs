@@ -28,12 +28,11 @@ pub fn test_encryption_to_decryption() {
 }
 
 #[test]
-fn image_encryption_to_decryption() {
+fn image_embedding_and_dislodging() {
     let png_path = format!(
         "./{}.png",
-        download_random_meme(meme_vault_fetcher::MemeSubreddit::ProgrammerHumor, ".")
+        download_random_meme(meme_vault_fetcher::MemeSubreddit::ProgrammerHumor, ".", "test.png")
             .expect("Failed to download meme")
-            .replace(" ", "_"),
     );
 
     let record = Record::new("Tester", "Just a simple testing record", "password");
@@ -45,6 +44,31 @@ fn image_encryption_to_decryption() {
             .expect("Failed to dislodge record");
 
     assert_eq!(record, dislodged_record);
+
+    fs::remove_file(png_path).expect("Failed to delete file");
+}
+
+#[test]
+fn image_embedding_and_dislodging_with_encryption() {
+    let png_path = format!(
+        "./{}.png",
+        download_random_meme(meme_vault_fetcher::MemeSubreddit::ProgrammerHumor, ".", "test.png")
+            .expect("Failed to download meme")
+    );
+
+    let password = "Passw0rd!";
+
+    let record = Record::new("Tester", "Just a simple testing record", "password");
+
+    let encrypted_record = encrypt_record(&record, password).expect("Failed to encrypt record");
+
+    embed_record(&encrypted_record, &png_path).expect("Failed to embed record");
+
+    let dislodged_record = dislodge_record(&png_path).expect("Failed to dislodge record");
+
+    let decrypted_record = decrypt_record(dislodged_record.as_bytes(), password).expect("Failed to decrypt record");
+
+    assert_eq!(record, decrypted_record);
 
     fs::remove_file(png_path).expect("Failed to delete file");
 }
