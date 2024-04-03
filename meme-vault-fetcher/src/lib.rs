@@ -1,7 +1,4 @@
-use std::{
-    error::Error,
-    fs::File,
-};
+use std::{error::Error, fs::File};
 
 /// The URL of the API for meme fetching
 const API_URL: &str = "https://meme-api.com/gimme/";
@@ -59,11 +56,11 @@ fn get_random_meme(source: MemeSubreddit) -> Result<Meme, reqwest::Error> {
 /// # Returns
 ///
 /// An error if either the file fails to create, or if the GET request fails
-fn download_meme(meme: &Meme, dest_dir: &str) -> Result<(), Box<dyn Error>> {
+fn download_meme(meme: &Meme, dest_dir: &str, dist_file: &str) -> Result<(), Box<dyn Error>> {
     // Removing spaces from the file name
     let formated_title = meme.title.replace(" ", "_");
 
-    let path = format!("{}/{}.png", dest_dir, formated_title);
+    let path = format!("{}/{}", dest_dir, dist_file);
 
     let mut dest = File::create(&path)?;
 
@@ -82,15 +79,20 @@ fn download_meme(meme: &Meme, dest_dir: &str) -> Result<(), Box<dyn Error>> {
 /// - `source` The subreddit to get the Meme from
 /// - `dest_dir` The directory to download the meme to. **NOTE** do not append a / at the end of
 /// to the end of the path, this is appended in the function
+/// - `dest_file` The name of the file to write the meme to
 ///
 /// # Returns
 ///
-/// An error if either the file fails to create, or if the GET request fails. Otherwise the name of
-/// the downloaded meme
-pub fn download_random_meme(source: MemeSubreddit, dest_dir: &str) -> Result<String, Box<dyn Error>> {
-   let meme = get_random_meme(source)?;
+/// An error if either the file fails to create, or if the GET request fails. Otherwise the path to
+/// the downloaded file
+pub fn download_random_meme(
+    source: MemeSubreddit,
+    dest_dir: &str,
+    dest_file: &str
+) -> Result<String, Box<dyn Error>> {
+    let meme = get_random_meme(source)?;
 
-   download_meme(&meme, dest_dir)?;
+    download_meme(&meme, dest_dir, dest_file)?;
 
-   Ok(meme.title)
+    Ok(format!("{}/{}", dest_dir, dest_file))
 }
