@@ -28,6 +28,22 @@ pub fn test_encryption_to_decryption() {
 }
 
 #[test]
+fn test_only_image_embedding() {
+    let png_path = download_random_meme(
+        meme_vault_fetcher::MemeSubreddit::ProgrammerHumor,
+        ".",
+        "test.png",
+    )
+    .expect("Failed to download meme");
+
+    let record = Record::new("Tester", "Just a simple testing record", "password");
+
+    embed_record(&record.as_bytes(), &png_path).expect("Failed to embed record");
+
+    fs::remove_file(png_path).expect("Failed to delete file");
+}
+
+#[test]
 fn image_embedding_and_dislodging() {
     let png_path = download_random_meme(
         meme_vault_fetcher::MemeSubreddit::ProgrammerHumor,
